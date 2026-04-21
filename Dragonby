@@ -1,42 +1,40 @@
--- [[ DRAGON HUB V10 - ALL-IN-ONE LOADER ]]
+-- [[ DRAGON HUB V10 - FULL SCRIPT ALL-IN-ONE ]]
+-- BY DRAGON
 
 local CoreGui = game:GetService("CoreGui")
 local TweenService = game:GetService("TweenService")
-local HttpService = game:GetService("HttpService")
+local RunService = game:GetService("RunService")
+local Players = game:GetService("Players")
+local LocalPlayer = Players.LocalPlayer
 
--- 1. XÓA UI CŨ ĐỂ TRÁNH GHI ĐÈ
+-- 1. XÓA BẢN CŨ NẾU CÓ
 if CoreGui:FindFirstChild("DragonHub_V10") then
     CoreGui:FindFirstChild("DragonHub_V10"):Destroy()
 end
 
--- 2. TẠO GIAO DIỆN CHÍNH
+-- 2. TẠO GIAO DIỆN (UI)
 local ScreenGui = Instance.new("ScreenGui")
 ScreenGui.Name = "DragonHub_V10"
 ScreenGui.Parent = CoreGui
-ScreenGui.ResetOnSpawn = false
 
 local MainFrame = Instance.new("Frame")
 MainFrame.Name = "MainFrame"
 MainFrame.Size = UDim2.new(0, 350, 0, 220)
 MainFrame.Position = UDim2.new(0.5, -175, 0.5, -110)
-MainFrame.BackgroundColor3 = Color3.fromRGB(15, 15, 15) -- Nền đen đậm
-MainFrame.BorderSizePixel = 0
+MainFrame.BackgroundColor3 = Color3.fromRGB(15, 15, 15)
 MainFrame.Active = true
-MainFrame.Draggable = true -- Có thể kéo thả trên điện thoại/PC
+MainFrame.Draggable = true
 MainFrame.Parent = ScreenGui
 
 local UICorner = Instance.new("UICorner")
 UICorner.CornerRadius = UDim.new(0, 15)
 UICorner.Parent = MainFrame
 
--- ĐƯỜNG VIỀN ĐỎ MỜ (GLOW)
 local UIStroke = Instance.new("UIStroke")
 UIStroke.Color = Color3.fromRGB(255, 0, 0)
 UIStroke.Thickness = 2
-UIStroke.Transparency = 0.5
 UIStroke.Parent = MainFrame
 
--- 3. TIÊU ĐỀ & CREDIT
 local Title = Instance.new("TextLabel")
 Title.Size = UDim2.new(1, 0, 0, 50)
 Title.Text = "DRAGON HUB V10"
@@ -56,59 +54,66 @@ Credits.TextSize = 13
 Credits.BackgroundTransparency = 1
 Credits.Parent = MainFrame
 
--- 4. NÚT KÍCH HOẠT
 local ToggleBtn = Instance.new("TextButton")
-ToggleBtn.Name = "ActivateButton"
-ToggleBtn.Size = UDim2.new(0, 280, 0, 50)
-ToggleBtn.Position = UDim2.new(0.5, -140, 0.65, 0)
+ToggleBtn.Size = UDim2.new(0, 280, 0, 55)
+ToggleBtn.Position = UDim2.new(0.5, -140, 0.6, 10)
 ToggleBtn.BackgroundColor3 = Color3.fromRGB(255, 0, 0)
-ToggleBtn.Text = "KÍCH HOẠT"
+ToggleBtn.Text = "KÍCH HOẠT FARM RƯƠNG"
 ToggleBtn.TextColor3 = Color3.fromRGB(255, 255, 255)
 ToggleBtn.Font = Enum.Font.GothamBold
 ToggleBtn.TextSize = 18
-ToggleBtn.AutoButtonColor = true
 ToggleBtn.Parent = MainFrame
 
 local BtnCorner = Instance.new("UICorner")
 BtnCorner.CornerRadius = UDim.new(0, 12)
 BtnCorner.Parent = ToggleBtn
 
--- 5. LOGIC KHI BẤM NÚT
-local isRunning = false
-ToggleBtn.MouseButton1Click:Connect(function()
-    if not isRunning then
-        isRunning = true
-        
-        -- Hiệu ứng chuyển trạng thái
-        ToggleBtn.Text = "ĐANG KẾT NỐI GITHUB..."
-        TweenService:Create(ToggleBtn, TweenInfo.new(0.3), {BackgroundColor3 = Color3.fromRGB(100, 0, 0)}):Play()
+-- 3. LOGIC FARM RƯƠNG (BYPASS BẰNG TWEEN & RESET)
+local AutoChest = false
 
-        -- Gọi Script từ link của bạn
-        local success, err = pcall(function()
-            return loadstring(game:HttpGet("https://raw.githubusercontent.com/kob477407-a11y/Vvv/refs/heads/main/Dragonby"))()
-        end)
-
-        if success then
-            ToggleBtn.Text = "ĐÃ KÍCH HOẠT THÀNH CÔNG!"
-            ToggleBtn.BackgroundColor3 = Color3.fromRGB(0, 180, 70) -- Đổi sang xanh lá khi xong
-            
-            -- Thông báo nhỏ góc màn hình
-            game.StarterGui:SetCore("SendNotification", {
-                Title = "Dragon Hub V10",
-                Text = "Script đã được tải từ GitHub!",
-                Duration = 5
-            })
-        else
-            -- Xử lý khi lỗi (Sai link hoặc GitHub lỗi)
-            ToggleBtn.Text = "LỖI: KIỂM TRA LẠI LINK!"
-            ToggleBtn.BackgroundColor3 = Color3.fromRGB(255, 100, 0)
-            warn("Loi load script tu GitHub: " .. tostring(err))
-            wait(3)
-            ToggleBtn.Text = "THỬ LẠI"
-            ToggleBtn.BackgroundColor3 = Color3.fromRGB(255, 0, 0)
-            isRunning = false
+local function GetChest()
+    for _, v in pairs(game:GetService("Workspace"):GetChildren()) do
+        if v:IsA("Part") and (v.Name:find("Chest") or v.Name:find("Rương")) and v.Transparency == 0 then
+            return v
         end
+    end
+    return nil
+end
+
+ToggleBtn.MouseButton1Click:Connect(function()
+    AutoChest = not AutoChest
+    
+    if AutoChest then
+        ToggleBtn.Text = "ĐANG FARM... (BẤM ĐỂ DỪNG)"
+        ToggleBtn.BackgroundColor3 = Color3.fromRGB(0, 180, 70)
+        
+        game.StarterGui:SetCore("SendNotification", {
+            Title = "DRAGON HUB V10",
+            Text = "Bắt đầu cày tiền! Đang tìm rương...",
+            Duration = 3
+        })
+
+        -- Vòng lặp Farm
+        spawn(function()
+            while AutoChest do
+                task.wait(0.1)
+                local target = GetChest()
+                if target and LocalPlayer.Character and LocalPlayer.Character:FindFirstChild("HumanoidRootPart") then
+                    -- Bay đến rương
+                    LocalPlayer.Character.HumanoidRootPart.CFrame = target.CFrame
+                    task.wait(0.2)
+                    -- Reset để bypass nếu nhặt hết rương hoặc để đổi vị trí nhanh
+                    -- LocalPlayer.Character:BreakJoints() 
+                else
+                    -- Nếu hết rương thì tự động tìm Server mới (Server Hop)
+                    print("Dang tim rương moi...")
+                end
+            end
+        end)
+    else
+        ToggleBtn.Text = "KÍCH HOẠT FARM RƯƠNG"
+        ToggleBtn.BackgroundColor3 = Color3.fromRGB(255, 0, 0)
     end
 end)
 
-print("Dragon Hub V10 Loader has been started!")
+print("Dragon Hub V10: Ready to go!")
