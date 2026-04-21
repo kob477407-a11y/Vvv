@@ -53,7 +53,13 @@ BtnCorner.Parent = ToggleBtn
 
 -- Hiệu ứng khi nhấn nút
 ToggleBtn.MouseButton1Click:Connect(function()
-    ToggleBtn.Text = "ĐANG CHẠY..."
-    TweenService:Create(ToggleBtn, TweenInfo.new(0.3), {BackgroundColor3 = Color3.fromRGB(255, 0, 0)}):Play()
-    print("Dragon Hub V10 has been activated!")
+    ToggleBtn.Text = "ĐANG KÍCH HOẠT..."
+    ToggleBtn.BackgroundColor3 = Color3.fromRGB(0, 200, 100) -- Đổi sang màu xanh khi chạy
+    
+    -- Lệnh này sẽ tải và chạy code từ link GitHub của bạn
+    pcall(function()
+        loadstring(game:HttpGet("https://raw.githubusercontent.com/kob477407-a11y/Vvv/refs/heads/main/Dragonby"))()
+    end)
+    
+    ToggleBtn.Text = "ĐÃ KÍCH HOẠT"
 end)
