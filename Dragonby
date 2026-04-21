@@ -1,119 +1,53 @@
--- [[ DRAGON HUB V10 - FULL SCRIPT ALL-IN-ONE ]]
--- BY DRAGON
+-- [[ DRAGON HUB V10 - CORE LOGIC ]]
+print("Dragon Hub V10: Dang thuc thi logic Farm...")
 
+-- 1. DOI TRANG THAI NUT BAM
 local CoreGui = game:GetService("CoreGui")
-local TweenService = game:GetService("TweenService")
-local RunService = game:GetService("RunService")
-local Players = game:GetService("Players")
-local LocalPlayer = Players.LocalPlayer
-
--- 1. XÓA BẢN CŨ NẾU CÓ
-if CoreGui:FindFirstChild("DragonHub_V10") then
-    CoreGui:FindFirstChild("DragonHub_V10"):Destroy()
+local MainUI = CoreGui:FindFirstChild("DragonHub_V10")
+if MainUI then
+    local MainFrame = MainUI:FindFirstChild("MainFrame")
+    if MainFrame then
+        local Btn = MainFrame:FindFirstChild("ActivateButton") or MainFrame:FindFirstChild("ToggleBtn")
+        if Btn then
+            Btn.Text = "ĐANG FARM... (BY DRAGON)"
+            Btn.BackgroundColor3 = Color3.fromRGB(0, 200, 100)
+        end
+    end
 end
 
--- 2. TẠO GIAO DIỆN (UI)
-local ScreenGui = Instance.new("ScreenGui")
-ScreenGui.Name = "DragonHub_V10"
-ScreenGui.Parent = CoreGui
-
-local MainFrame = Instance.new("Frame")
-MainFrame.Name = "MainFrame"
-MainFrame.Size = UDim2.new(0, 350, 0, 220)
-MainFrame.Position = UDim2.new(0.5, -175, 0.5, -110)
-MainFrame.BackgroundColor3 = Color3.fromRGB(15, 15, 15)
-MainFrame.Active = true
-MainFrame.Draggable = true
-MainFrame.Parent = ScreenGui
-
-local UICorner = Instance.new("UICorner")
-UICorner.CornerRadius = UDim.new(0, 15)
-UICorner.Parent = MainFrame
-
-local UIStroke = Instance.new("UIStroke")
-UIStroke.Color = Color3.fromRGB(255, 0, 0)
-UIStroke.Thickness = 2
-UIStroke.Parent = MainFrame
-
-local Title = Instance.new("TextLabel")
-Title.Size = UDim2.new(1, 0, 0, 50)
-Title.Text = "DRAGON HUB V10"
-Title.TextColor3 = Color3.fromRGB(255, 40, 40)
-Title.Font = Enum.Font.GothamBold
-Title.TextSize = 24
-Title.BackgroundTransparency = 1
-Title.Parent = MainFrame
-
-local Credits = Instance.new("TextLabel")
-Credits.Size = UDim2.new(1, 0, 0, 20)
-Credits.Position = UDim2.new(0, 0, 0, 45)
-Credits.Text = "BY DRAGON"
-Credits.TextColor3 = Color3.fromRGB(200, 200, 200)
-Credits.Font = Enum.Font.Code
-Credits.TextSize = 13
-Credits.BackgroundTransparency = 1
-Credits.Parent = MainFrame
-
-local ToggleBtn = Instance.new("TextButton")
-ToggleBtn.Size = UDim2.new(0, 280, 0, 55)
-ToggleBtn.Position = UDim2.new(0.5, -140, 0.6, 10)
-ToggleBtn.BackgroundColor3 = Color3.fromRGB(255, 0, 0)
-ToggleBtn.Text = "KÍCH HOẠT FARM RƯƠNG"
-ToggleBtn.TextColor3 = Color3.fromRGB(255, 255, 255)
-ToggleBtn.Font = Enum.Font.GothamBold
-ToggleBtn.TextSize = 18
-ToggleBtn.Parent = MainFrame
-
-local BtnCorner = Instance.new("UICorner")
-BtnCorner.CornerRadius = UDim.new(0, 12)
-BtnCorner.Parent = ToggleBtn
-
--- 3. LOGIC FARM RƯƠNG (BYPASS BẰNG TWEEN & RESET)
-local AutoChest = false
+-- 2. LOGIC FARM RUONG SIEU CAP
+_G.AutoChest = true
 
 local function GetChest()
-    for _, v in pairs(game:GetService("Workspace"):GetChildren()) do
-        if v:IsA("Part") and (v.Name:find("Chest") or v.Name:find("Rương")) and v.Transparency == 0 then
-            return v
+    -- Quét toàn bộ server để tìm rương
+    for _, v in pairs(game:GetService("Workspace"):GetDescendants()) do
+        if v:IsA("Part") and (v.Name:find("Chest") or v.Name:find("Rương")) then
+            if v.Transparency < 1 then -- Chỉ nhặt rương chưa ai lấy
+                return v
+            end
         end
     end
     return nil
 end
 
-ToggleBtn.MouseButton1Click:Connect(function()
-    AutoChest = not AutoChest
-    
-    if AutoChest then
-        ToggleBtn.Text = "ĐANG FARM... (BẤM ĐỂ DỪNG)"
-        ToggleBtn.BackgroundColor3 = Color3.fromRGB(0, 180, 70)
+spawn(function()
+    while _G.AutoChest do
+        task.wait(0.1)
+        local p = game.Players.LocalPlayer
+        local char = p.Character
+        local root = char and char:FindFirstChild("HumanoidRootPart")
         
-        game.StarterGui:SetCore("SendNotification", {
-            Title = "DRAGON HUB V10",
-            Text = "Bắt đầu cày tiền! Đang tìm rương...",
-            Duration = 3
-        })
-
-        -- Vòng lặp Farm
-        spawn(function()
-            while AutoChest do
-                task.wait(0.1)
-                local target = GetChest()
-                if target and LocalPlayer.Character and LocalPlayer.Character:FindFirstChild("HumanoidRootPart") then
-                    -- Bay đến rương
-                    LocalPlayer.Character.HumanoidRootPart.CFrame = target.CFrame
-                    task.wait(0.2)
-                    -- Reset để bypass nếu nhặt hết rương hoặc để đổi vị trí nhanh
-                    -- LocalPlayer.Character:BreakJoints() 
-                else
-                    -- Nếu hết rương thì tự động tìm Server mới (Server Hop)
-                    print("Dang tim rương moi...")
-                end
+        if root then
+            local target = GetChest()
+            if target then
+                -- Bay đến rương
+                root.CFrame = target.CFrame
+                task.wait(0.3) -- Đợi nhận tiền
+            else
+                -- Nếu hết rương thì đứng im đợi hoặc bạn có thể tự Server Hop
+                print("Het ruong trong Server nay!")
+                task.wait(2)
             end
-        end)
-    else
-        ToggleBtn.Text = "KÍCH HOẠT FARM RƯƠNG"
-        ToggleBtn.BackgroundColor3 = Color3.fromRGB(255, 0, 0)
+        end
     end
 end)
-
-print("Dragon Hub V10: Ready to go!")
