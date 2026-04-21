@@ -1,88 +1,76 @@
--- [[ DRAGON HUB V10 - THE ULTIMATE EDITION ]]
-local Fluent = loadstring(game:HttpGet("https://github.com/dawid-scripts/Fluent/releases/latest/download/main.lua"))()
+-- [[ DRAGON HUB V10 - RAYFIELD EDITION ]]
+local Rayfield = loadstring(game:HttpGet('https://sirius.menu/rayfield'))()
 
-local Window = Fluent:CreateWindow({
-    Title = "DRAGON HUB V10",
-    SubTitle = "by Dragon",
-    TabWidth = 160,
-    Size = UDim2.fromOffset(450, 320),
-    Acrylic = true,
-    Theme = "Dark"
+local Window = Rayfield:CreateWindow({
+   Name = "DRAGON HUB V10",
+   LoadingTitle = "BY DRAGON",
+   LoadingSubtitle = "Pro Chest Farm",
+   ConfigurationSaving = {
+      Enabled = true,
+      FolderName = "DragonHubV10"
+   },
+   KeySystem = false 
 })
 
-local Tabs = {
-    Main = Window:AddTab({ Title = "Main Farm", Icon = "home" })
-}
+local MainTab = Window:CreateTab("Auto Farm", 4483362458)
+local Section = MainTab:CreateSection("Chest Farm")
 
 _G.AutoChest = false
 
--- HÀM DI CHUYỂN SIÊU MƯỢT (KHÔNG ĐỨNG IM)
-local function SpeedTeleport(targetCFrame)
+-- HÀM BAY MƯỢT (BYPASS ANTI-CHEAT)
+local function SmoothTP(targetCFrame)
     local char = game.Players.LocalPlayer.Character
     local root = char and char:FindFirstChild("HumanoidRootPart")
     if root then
         local distance = (root.Position - targetCFrame.p).Magnitude
-        local speed = 350 -- Tốc độ cực nhanh nhưng vẫn an toàn
-        local tween = game:GetService("TweenService"):Create(root, TweenInfo.new(distance/speed, Enum.EasingStyle.Linear), {CFrame = targetCFrame})
+        -- Tốc độ 300-350 là cực nhanh nhưng không bị văng game
+        local info = TweenInfo.new(distance / 320, Enum.EasingStyle.Linear)
+        local tween = game:GetService("TweenService"):Create(root, info, {CFrame = targetCFrame})
         tween:Play()
         return tween
     end
 end
 
-Tabs.Main:AddToggle("ChestFarm", {Title = "Auto Farm Rương (Tất cả Sea)", Default = false })
-
-Tabs.Main:AddButton({
-    Title = "Server Hop (Đổi Server)",
-    Description = "Dùng khi hết rương để sang server mới",
-    Callback = function()
-        local PlaceID = game.PlaceId
-        local AllIDs = {}
-        local foundAnything = ""
-        local ActualIP = ""
-        local function TPReturner()
-            local Site;
-            if foundAnything == "" then
-                Site = game.HttpService:JSONDecode(game:HttpGet('https://games.roblox.com/v1/games/' .. PlaceID .. '/servers/Public?sortOrder=Asc&limit=100'))
-            else
-                Site = game.HttpService:JSONDecode(game:HttpGet('https://games.roblox.com/v1/games/' .. PlaceID .. '/servers/Public?sortOrder=Asc&limit=100&cursor=' .. foundAnything))
-            end
-            if Site.nextPageCursor and Site.nextPageCursor ~= "" and Site.nextPageCursor ~= nil then
-                foundAnything = Site.nextPageCursor
-            end
-            for i,v in pairs(Site.data) do
-                if tonumber(v.playing) < tonumber(v.maxPlayers) then
-                    game:GetService('TeleportService'):TeleportToPlaceInstance(PlaceID, v.id, game.Players.LocalPlayer)
-                end
-            end
-        end
-        TPReturner()
-    end
-})
-
--- VÒNG LẶP THỰC THI
-spawn(function()
-    while task.wait() do
-        if Fluent.Options.ChestFarm.Value then
-            pcall(function()
-                local target = nil
-                for _, v in pairs(game:GetService("Workspace"):GetDescendants()) do
-                    if v:IsA("Part") and (v.Name:find("Chest") or v.Name:find("Rương")) and v.Transparency < 1 then
+-- NÚT BẬT/TẮT RAYFIELD
+MainTab:CreateToggle({
+   Name = "Auto Farm Rương (Mượt)",
+   CurrentValue = false,
+   Flag = "ChestToggle",
+   Callback = function(Value)
+      _G.AutoChest = Value
+      if Value then
+         spawn(function()
+            while _G.AutoChest do
+               task.wait(0.1)
+               pcall(function()
+                  local target = nil
+                  -- Quét tìm rương gần nhất
+                  for _, v in pairs(game:GetService("Workspace"):GetDescendants()) do
+                     if v:IsA("Part") and (v.Name:find("Chest") or v.Name:find("Rương")) and v.Transparency < 1 then
                         target = v
                         break
-                    end
-                end
+                     end
+                  end
 
-                if target then
-                    local move = SpeedTeleport(target.CFrame)
-                    if move then move.Completed:Wait() end
-                    task.wait(0.2)
-                else
-                    Fluent:Notify({Title = "Dragon Hub", Content = "Hết rương! Đang đợi hoặc bạn nên đổi Server.", Duration = 3})
-                    task.wait(5)
-                end
-            end)
-        end
-    end
-end)
+                  if target and _G.AutoChest then
+                     local movement = SmoothTP(target.CFrame)
+                     if movement then
+                        movement.Completed:Wait() -- Chờ bay tới nơi
+                        task.wait(0.3) -- Nghỉ một chút để nhận tiền
+                     end
+                  else
+                      task.wait(1)
+                  end
+               end)
+            end
+         end)
+      end
+   end,
+})
 
-Window:SelectTab(1)
+Rayfield:Notify({
+   Title = "Dragon Hub V10",
+   Content = "Kích hoạt thành công giao diện Rayfield!",
+   Duration = 5,
+   Image = 4483362458,
+})
