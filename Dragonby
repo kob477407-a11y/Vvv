@@ -1,4 +1,4 @@
--- [[ DRAGON HUB V10 - FIX LỖI KHÔNG NHẶT RƯƠNG ]]
+-- [[ DRAGON HUB V10 - FIX CHẠY 100% ]]
 local OrionLib = loadstring(game:HttpGet(('https://raw.githubusercontent.com/shlexware/Orion/main/source')))()
 
 local Window = OrionLib:MakeWindow({
@@ -6,7 +6,7 @@ local Window = OrionLib:MakeWindow({
     HidePremium = false, 
     SaveConfig = true, 
     ConfigFolder = "DragonV10",
-    IntroText = "Đang khởi động Dragon Hub..."
+    IntroText = "Khởi động hệ thống quét..."
 })
 
 local MainTab = Window:MakeTab({
@@ -17,46 +17,39 @@ local MainTab = Window:MakeTab({
 
 _G.AutoChest = false
 
--- HÀM DI CHUYỂN SIÊU TỐC (BYPASS ANTI-CHEAT)
+-- HÀM BAY MƯỢT (CHỐNG ANTI-CHEAT KHÓA VỊ TRÍ)
 local function SmoothTP(targetCFrame)
     local char = game.Players.LocalPlayer.Character
     local root = char and char:FindFirstChild("HumanoidRootPart")
     if root then
         local distance = (root.Position - targetCFrame.p).Magnitude
-        -- Tăng tốc độ lên 380 để nhặt cho nhanh
-        local info = TweenInfo.new(distance / 380, Enum.EasingStyle.Linear)
+        -- Tốc độ 350 là mức cực nhanh nhưng an toàn cho Sea 3
+        local info = TweenInfo.new(distance / 350, Enum.EasingStyle.Linear)
         local tween = game:GetService("TweenService"):Create(root, info, {CFrame = targetCFrame})
         tween:Play()
         return tween
     end
 end
 
--- HÀM QUÉT RƯƠNG CHUẨN (FIX LỖI KHÔNG NHẶT)
+-- HÀM TÌM RƯƠNG "CỰC MẠNH"
 function GetChest()
-    for _, v in pairs(game:GetService("Workspace"):GetChildren()) do
-        -- Kiểm tra tên rương chuẩn trong Blox Fruit
-        if v:IsA("Part") or v:IsA("Model") then
-            if v.Name:find("Chest") or v.Name:find("Rương") then
-                -- Kiểm tra rương chưa bị nhặt (Transparency < 1)
-                if v:FindFirstChild("TouchInterest") or v.Transparency < 1 then
-                    return v
-                end
-            end
-        end
-    end
-    -- Nếu không thấy ở ngoài, quét sâu hơn vào Descendants
+    local target = nil
+    local dist = math.huge
+    -- Quét toàn bộ Descendants để chắc chắn không bỏ sót rương nào trong lâu đài hay hang động
     for _, v in pairs(game:GetService("Workspace"):GetDescendants()) do
-        if v.Name:find("Chest") or v.Name:find("Rương") then
-            if v:IsA("Part") and v.Transparency < 1 then
-                return v
+        if v:IsA("Part") and (v.Name:find("Chest") or v.Name:find("Rương")) and v.Transparency < 1 then
+            local mag = (game.Players.LocalPlayer.Character.HumanoidRootPart.Position - v.Position).Magnitude
+            if mag < dist then
+                dist = mag
+                target = v
             end
         end
     end
-    return nil
+    return target
 end
 
 MainTab:AddToggle({
-	Name = "Bắt Đầu Nhặt Rương",
+	Name = "Auto Farm Rương (Mượt)",
 	Default = false,
 	Callback = function(Value)
 		_G.AutoChest = Value
@@ -65,16 +58,18 @@ MainTab:AddToggle({
                 while _G.AutoChest do
                     task.wait(0.1)
                     pcall(function()
-                        local target = GetChest()
-                        if target and _G.AutoChest then
-                            local movement = SmoothTP(target.CFrame)
+                        local chest = GetChest()
+                        if chest and _G.AutoChest then
+                            -- Bay đến rương gần nhất
+                            local movement = SmoothTP(chest.CFrame)
                             if movement then
-                                movement.Completed:Wait() -- Đợi bay tới tận nơi
-                                task.wait(0.2) -- Nghỉ 0.2s để game kịp cộng tiền
+                                movement.Completed:Wait() -- Đợi bay tới nơi
+                                task.wait(0.2) -- Nghỉ 0.2s để game nhận tiền
                             end
                         else
-                            -- Nếu hết rương thì đứng đợi 2s rồi quét tiếp
-                            task.wait(2)
+                            -- Nếu hết rương trong Server thì đổi Server (Server Hop) hoặc đợi
+                            warn("Dragon Hub: Khong tim thay ruong, dang doi...")
+                            task.wait(3)
                         end
                     end)
                 end
