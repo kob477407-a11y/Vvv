@@ -1,4 +1,4 @@
--- [[ DRAGON HUB V10 - FIX CHẠY 100% ]]
+-- [[ DRAGON HUB V10 - ANTI-STUCK & FAST CHEST ]]
 local OrionLib = loadstring(game:HttpGet(('https://raw.githubusercontent.com/shlexware/Orion/main/source')))()
 
 local Window = OrionLib:MakeWindow({
@@ -6,7 +6,7 @@ local Window = OrionLib:MakeWindow({
     HidePremium = false, 
     SaveConfig = true, 
     ConfigFolder = "DragonV10",
-    IntroText = "Khởi động hệ thống quét..."
+    IntroText = "Fixing Iron Block Mode..."
 })
 
 local MainTab = Window:MakeTab({
@@ -17,31 +17,46 @@ local MainTab = Window:MakeTab({
 
 _G.AutoChest = false
 
--- HÀM BAY MƯỢT (CHỐNG ANTI-CHEAT KHÓA VỊ TRÍ)
+-- HÀM XUYÊN TƯỜNG (ĐỂ KHÔNG BỊ KẸT KHI BAY)
+spawn(function()
+    game:GetService("RunService").Stepped:Connect(function()
+        if _G.AutoChest then
+            for _, v in pairs(game.Players.LocalPlayer.Character:GetDescendants()) do
+                if v:IsA("BasePart") then
+                    v.CanCollide = false
+                end
+            end
+        end
+    end)
+end)
+
+-- HÀM BAY SIÊU MƯỢT
 local function SmoothTP(targetCFrame)
     local char = game.Players.LocalPlayer.Character
     local root = char and char:FindFirstChild("HumanoidRootPart")
     if root then
         local distance = (root.Position - targetCFrame.p).Magnitude
-        -- Tốc độ 350 là mức cực nhanh nhưng an toàn cho Sea 3
-        local info = TweenInfo.new(distance / 350, Enum.EasingStyle.Linear)
+        local speed = 350 
+        local info = TweenInfo.new(distance / speed, Enum.EasingStyle.Linear)
         local tween = game:GetService("TweenService"):Create(root, info, {CFrame = targetCFrame})
         tween:Play()
         return tween
     end
 end
 
--- HÀM TÌM RƯƠNG "CỰC MẠNH"
+-- BỘ QUÉT RƯƠNG ƯU TIÊN KHOẢNG CÁCH
 function GetChest()
     local target = nil
     local dist = math.huge
-    -- Quét toàn bộ Descendants để chắc chắn không bỏ sót rương nào trong lâu đài hay hang động
     for _, v in pairs(game:GetService("Workspace"):GetDescendants()) do
-        if v:IsA("Part") and (v.Name:find("Chest") or v.Name:find("Rương")) and v.Transparency < 1 then
-            local mag = (game.Players.LocalPlayer.Character.HumanoidRootPart.Position - v.Position).Magnitude
-            if mag < dist then
-                dist = mag
-                target = v
+        if (v.Name:find("Chest") or v.Name:find("Rương")) and v:IsA("TouchTransmitter") then
+            local chest = v.Parent
+            if chest and chest:IsA("BasePart") and chest.Transparency < 1 then
+                local mag = (game.Players.LocalPlayer.Character.HumanoidRootPart.Position - chest.Position).Magnitude
+                if mag < dist then
+                    dist = mag
+                    target = chest
+                end
             end
         end
     end
@@ -49,7 +64,7 @@ function GetChest()
 end
 
 MainTab:AddToggle({
-	Name = "Auto Farm Rương (Mượt)",
+	Name = "Bắt đầu nhặt rương (Fix Stuck)",
 	Default = false,
 	Callback = function(Value)
 		_G.AutoChest = Value
@@ -58,18 +73,17 @@ MainTab:AddToggle({
                 while _G.AutoChest do
                     task.wait(0.1)
                     pcall(function()
-                        local chest = GetChest()
-                        if chest and _G.AutoChest then
-                            -- Bay đến rương gần nhất
-                            local movement = SmoothTP(chest.CFrame)
+                        local target = GetChest()
+                        if target and _G.AutoChest then
+                            local movement = SmoothTP(target.CFrame)
                             if movement then
-                                movement.Completed:Wait() -- Đợi bay tới nơi
-                                task.wait(0.2) -- Nghỉ 0.2s để game nhận tiền
+                                movement.Completed:Wait()
+                                task.wait(0.2)
                             end
                         else
-                            -- Nếu hết rương trong Server thì đổi Server (Server Hop) hoặc đợi
-                            warn("Dragon Hub: Khong tim thay ruong, dang doi...")
-                            task.wait(3)
+                            -- Nếu đứng im, thử nhảy lên để reset vị trí
+                            game.Players.LocalPlayer.Character.Humanoid.Jump = true
+                            task.wait(2)
                         end
                     end)
                 end
