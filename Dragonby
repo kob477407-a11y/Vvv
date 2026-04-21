@@ -1,45 +1,68 @@
--- [[ DRAGON HUB V10 - FIX CHAY 100% ]]
-print("Dragon Hub V10 đang khởi động...")
+-- [[ DRAGON HUB V10 - THE ULTIMATE EDITION ]]
+local Fluent = loadstring(game:HttpGet("https://github.com/dawid-scripts/Fluent/releases/latest/download/main.lua"))()
 
-local Players = game:GetService("Players")
-local LP = Players.LocalPlayer
-local TweenService = game:GetService("TweenService")
+local Window = Fluent:CreateWindow({
+    Title = "DRAGON HUB V10",
+    SubTitle = "by Dragon",
+    TabWidth = 160,
+    Size = UDim2.fromOffset(450, 320),
+    Acrylic = true,
+    Theme = "Dark"
+})
 
--- 1. XÓA UI CŨ
-if game:GetService("CoreGui"):FindFirstChild("DragonHubV10") then
-    game:GetService("CoreGui").DragonHubV10:Destroy()
+local Tabs = {
+    Main = Window:AddTab({ Title = "Main Farm", Icon = "home" })
+}
+
+_G.AutoChest = false
+
+-- HÀM DI CHUYỂN SIÊU MƯỢT (KHÔNG ĐỨNG IM)
+local function SpeedTeleport(targetCFrame)
+    local char = game.Players.LocalPlayer.Character
+    local root = char and char:FindFirstChild("HumanoidRootPart")
+    if root then
+        local distance = (root.Position - targetCFrame.p).Magnitude
+        local speed = 350 -- Tốc độ cực nhanh nhưng vẫn an toàn
+        local tween = game:GetService("TweenService"):Create(root, TweenInfo.new(distance/speed, Enum.EasingStyle.Linear), {CFrame = targetCFrame})
+        tween:Play()
+        return tween
+    end
 end
 
--- 2. TẠO UI ĐƠN GIẢN NHƯNG CHẠY MƯỢT
-local sg = Instance.new("ScreenGui", game:GetService("CoreGui"))
-sg.Name = "DragonHubV10"
+Tabs.Main:AddToggle("ChestFarm", {Title = "Auto Farm Rương (Tất cả Sea)", Default = false })
 
-local main = Instance.new("Frame", sg)
-main.Size = UDim2.new(0, 200, 0, 100)
-main.Position = UDim2.new(0.5, -100, 0.5, -50)
-main.BackgroundColor3 = Color3.fromRGB(30, 30, 30)
-main.Active = true
-main.Draggable = true -- Có thể kéo trên màn hình
+Tabs.Main:AddButton({
+    Title = "Server Hop (Đổi Server)",
+    Description = "Dùng khi hết rương để sang server mới",
+    Callback = function()
+        local PlaceID = game.PlaceId
+        local AllIDs = {}
+        local foundAnything = ""
+        local ActualIP = ""
+        local function TPReturner()
+            local Site;
+            if foundAnything == "" then
+                Site = game.HttpService:JSONDecode(game:HttpGet('https://games.roblox.com/v1/games/' .. PlaceID .. '/servers/Public?sortOrder=Asc&limit=100'))
+            else
+                Site = game.HttpService:JSONDecode(game:HttpGet('https://games.roblox.com/v1/games/' .. PlaceID .. '/servers/Public?sortOrder=Asc&limit=100&cursor=' .. foundAnything))
+            end
+            if Site.nextPageCursor and Site.nextPageCursor ~= "" and Site.nextPageCursor ~= nil then
+                foundAnything = Site.nextPageCursor
+            end
+            for i,v in pairs(Site.data) do
+                if tonumber(v.playing) < tonumber(v.maxPlayers) then
+                    game:GetService('TeleportService'):TeleportToPlaceInstance(PlaceID, v.id, game.Players.LocalPlayer)
+                end
+            end
+        end
+        TPReturner()
+    end
+})
 
-local btn = Instance.new("TextButton", main)
-btn.Size = UDim2.new(1, -20, 1, -20)
-btn.Position = UDim2.new(0, 10, 0, 10)
-btn.BackgroundColor3 = Color3.fromRGB(255, 0, 0)
-btn.Text = "BẮT ĐẦU FARM"
-btn.TextColor3 = Color3.fromRGB(255, 255, 255)
-btn.Font = Enum.Font.GothamBold
-btn.TextSize = 18
-
--- 3. LOGIC BAY MƯỢT (KHÔNG NHẢY CÓC - KHÔNG ĐỨNG IM)
-_G.DragonAuto = false
-btn.MouseButton1Click:Connect(function()
-    _G.DragonAuto = not _G.DragonAuto
-    btn.Text = _G.DragonAuto and "ĐANG FARM..." or "BẮT ĐẦU FARM"
-    btn.BackgroundColor3 = _G.DragonAuto and Color3.fromRGB(0, 200, 100) or Color3.fromRGB(255, 0, 0)
-    
-    spawn(function()
-        while _G.DragonAuto do
-            task.wait(0.1)
+-- VÒNG LẶP THỰC THI
+spawn(function()
+    while task.wait() do
+        if Fluent.Options.ChestFarm.Value then
             pcall(function()
                 local target = nil
                 for _, v in pairs(game:GetService("Workspace"):GetDescendants()) do
@@ -48,17 +71,18 @@ btn.MouseButton1Click:Connect(function()
                         break
                     end
                 end
-                
-                if target and LP.Character and LP.Character:FindFirstChild("HumanoidRootPart") then
-                    local root = LP.Character.HumanoidRootPart
-                    local dist = (root.Position - target.Position).Magnitude
-                    -- Bay mượt với tốc độ 300
-                    local tween = TweenService:Create(root, TweenInfo.new(dist/300, Enum.EasingStyle.Linear), {CFrame = target.CFrame})
-                    tween:Play()
-                    tween.Completed:Wait()
+
+                if target then
+                    local move = SpeedTeleport(target.CFrame)
+                    if move then move.Completed:Wait() end
                     task.wait(0.2)
+                else
+                    Fluent:Notify({Title = "Dragon Hub", Content = "Hết rương! Đang đợi hoặc bạn nên đổi Server.", Duration = 3})
+                    task.wait(5)
                 end
             end)
         end
-    end)
+    end
 end)
+
+Window:SelectTab(1)
