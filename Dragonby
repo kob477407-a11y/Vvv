@@ -1,76 +1,86 @@
--- [[ DRAGON HUB V10 - RAYFIELD EDITION ]]
-local Rayfield = loadstring(game:HttpGet('https://sirius.menu/rayfield'))()
+-- [[ DRAGON HUB V10 - FIX LỖI KHÔNG NHẶT RƯƠNG ]]
+local OrionLib = loadstring(game:HttpGet(('https://raw.githubusercontent.com/shlexware/Orion/main/source')))()
 
-local Window = Rayfield:CreateWindow({
-   Name = "DRAGON HUB V10",
-   LoadingTitle = "BY DRAGON",
-   LoadingSubtitle = "Pro Chest Farm",
-   ConfigurationSaving = {
-      Enabled = true,
-      FolderName = "DragonHubV10"
-   },
-   KeySystem = false 
+local Window = OrionLib:MakeWindow({
+    Name = "DRAGON HUB V10", 
+    HidePremium = false, 
+    SaveConfig = true, 
+    ConfigFolder = "DragonV10",
+    IntroText = "Đang khởi động Dragon Hub..."
 })
 
-local MainTab = Window:CreateTab("Auto Farm", 4483362458)
-local Section = MainTab:CreateSection("Chest Farm")
+local MainTab = Window:MakeTab({
+	Name = "Auto Farm",
+	Icon = "rbxassetid://4483362458",
+	PremiumOnly = false
+})
 
 _G.AutoChest = false
 
--- HÀM BAY MƯỢT (BYPASS ANTI-CHEAT)
+-- HÀM DI CHUYỂN SIÊU TỐC (BYPASS ANTI-CHEAT)
 local function SmoothTP(targetCFrame)
     local char = game.Players.LocalPlayer.Character
     local root = char and char:FindFirstChild("HumanoidRootPart")
     if root then
         local distance = (root.Position - targetCFrame.p).Magnitude
-        -- Tốc độ 300-350 là cực nhanh nhưng không bị văng game
-        local info = TweenInfo.new(distance / 320, Enum.EasingStyle.Linear)
+        -- Tăng tốc độ lên 380 để nhặt cho nhanh
+        local info = TweenInfo.new(distance / 380, Enum.EasingStyle.Linear)
         local tween = game:GetService("TweenService"):Create(root, info, {CFrame = targetCFrame})
         tween:Play()
         return tween
     end
 end
 
--- NÚT BẬT/TẮT RAYFIELD
-MainTab:CreateToggle({
-   Name = "Auto Farm Rương (Mượt)",
-   CurrentValue = false,
-   Flag = "ChestToggle",
-   Callback = function(Value)
-      _G.AutoChest = Value
-      if Value then
-         spawn(function()
-            while _G.AutoChest do
-               task.wait(0.1)
-               pcall(function()
-                  local target = nil
-                  -- Quét tìm rương gần nhất
-                  for _, v in pairs(game:GetService("Workspace"):GetDescendants()) do
-                     if v:IsA("Part") and (v.Name:find("Chest") or v.Name:find("Rương")) and v.Transparency < 1 then
-                        target = v
-                        break
-                     end
-                  end
-
-                  if target and _G.AutoChest then
-                     local movement = SmoothTP(target.CFrame)
-                     if movement then
-                        movement.Completed:Wait() -- Chờ bay tới nơi
-                        task.wait(0.3) -- Nghỉ một chút để nhận tiền
-                     end
-                  else
-                      task.wait(1)
-                  end
-               end)
+-- HÀM QUÉT RƯƠNG CHUẨN (FIX LỖI KHÔNG NHẶT)
+function GetChest()
+    for _, v in pairs(game:GetService("Workspace"):GetChildren()) do
+        -- Kiểm tra tên rương chuẩn trong Blox Fruit
+        if v:IsA("Part") or v:IsA("Model") then
+            if v.Name:find("Chest") or v.Name:find("Rương") then
+                -- Kiểm tra rương chưa bị nhặt (Transparency < 1)
+                if v:FindFirstChild("TouchInterest") or v.Transparency < 1 then
+                    return v
+                end
             end
-         end)
-      end
-   end,
+        end
+    end
+    -- Nếu không thấy ở ngoài, quét sâu hơn vào Descendants
+    for _, v in pairs(game:GetService("Workspace"):GetDescendants()) do
+        if v.Name:find("Chest") or v.Name:find("Rương") then
+            if v:IsA("Part") and v.Transparency < 1 then
+                return v
+            end
+        end
+    end
+    return nil
+end
+
+MainTab:AddToggle({
+	Name = "Bắt Đầu Nhặt Rương",
+	Default = false,
+	Callback = function(Value)
+		_G.AutoChest = Value
+        if Value then
+            spawn(function()
+                while _G.AutoChest do
+                    task.wait(0.1)
+                    pcall(function()
+                        local target = GetChest()
+                        if target and _G.AutoChest then
+                            local movement = SmoothTP(target.CFrame)
+                            if movement then
+                                movement.Completed:Wait() -- Đợi bay tới tận nơi
+                                task.wait(0.2) -- Nghỉ 0.2s để game kịp cộng tiền
+                            end
+                        else
+                            -- Nếu hết rương thì đứng đợi 2s rồi quét tiếp
+                            task.wait(2)
+                        end
+                    end)
+                end
+            end)
+        end
+	end    
 })
 
-Rayfield:Notify({
-   Title = "Dragon Hub V10",
-   Content = "Kích hoạt thành công giao diện Rayfield!",
-   Duration = 5,
-   Image = 4483362458,
-})
+OrionLib:Init()
