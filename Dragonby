@@ -1,90 +1,83 @@
--- [[ DRAGON HUB V10 - SOURCE CHUẨN ]]
-local Players = game:GetService("Players")
+-- [[ DRAGON HUB V10 - FINAL SOURCE ]]
 local CoreGui = game:GetService("CoreGui")
+local Players = game:GetService("Players")
+local lp = Players.LocalPlayer
 
--- 1. TẠO GIAO DIỆN (Nếu chưa có)
-if not CoreGui:FindFirstChild("DragonHub_V10") then
-    local ScreenGui = Instance.new("ScreenGui")
-    ScreenGui.Name = "DragonHub_V10"
-    ScreenGui.Parent = CoreGui
+-- XÓA UI CŨ
+if CoreGui:FindFirstChild("DragonHub_V10") then
+    CoreGui:FindFirstChild("DragonHub_V10"):Destroy()
+end
 
-    local MainFrame = Instance.new("Frame")
-    MainFrame.Name = "MainFrame"
-    MainFrame.Size = UDim2.new(0, 350, 0, 220)
-    MainFrame.Position = UDim2.new(0.5, -175, 0.5, -110)
-    MainFrame.BackgroundColor3 = Color3.fromRGB(15, 15, 15)
-    MainFrame.Active = true
-    MainFrame.Draggable = true
-    MainFrame.Parent = ScreenGui
+-- TẠO GIAO DIỆN
+local sg = Instance.new("ScreenGui", CoreGui)
+sg.Name = "DragonHub_V10"
 
-    local UICorner = Instance.new("UICorner")
-    UICorner.CornerRadius = UDim.new(0, 15)
-    UICorner.Parent = MainFrame
+local frame = Instance.new("Frame", sg)
+frame.Size = UDim2.new(0, 350, 0, 220)
+frame.Position = UDim2.new(0.5, -175, 0.5, -110)
+frame.BackgroundColor3 = Color3.fromRGB(15, 15, 15)
+frame.Active = true
+frame.Draggable = true
 
-    local UIStroke = Instance.new("UIStroke")
-    UIStroke.Color = Color3.fromRGB(255, 0, 0)
-    UIStroke.Thickness = 2
-    UIStroke.Parent = MainFrame
+local corner = Instance.new("UICorner", frame)
+corner.CornerRadius = UDim.new(0, 15)
 
-    local Title = Instance.new("TextLabel")
-    Title.Size = UDim2.new(1, 0, 0, 50)
-    Title.Text = "DRAGON HUB V10"
-    Title.TextColor3 = Color3.fromRGB(255, 40, 40)
-    Title.Font = Enum.Font.GothamBold
-    Title.TextSize = 24
-    Title.BackgroundTransparency = 1
-    Title.Parent = MainFrame
+local stroke = Instance.new("UIStroke", frame)
+stroke.Color = Color3.fromRGB(255, 0, 0)
+stroke.Thickness = 2
 
-    local Credits = Instance.new("TextLabel")
-    Credits.Size = UDim2.new(1, 0, 0, 20)
-    Credits.Position = UDim2.new(0, 0, 0, 45)
-    Credits.Text = "BY DRAGON"
-    Credits.TextColor3 = Color3.fromRGB(200, 200, 200)
-    Credits.Font = Enum.Font.Code
-    Credits.TextSize = 13
-    Credits.BackgroundTransparency = 1
-    Credits.Parent = MainFrame
+local title = Instance.new("TextLabel", frame)
+title.Size = UDim2.new(1, 0, 0, 50)
+title.Text = "DRAGON HUB V10"
+title.TextColor3 = Color3.fromRGB(255, 40, 40)
+title.Font = Enum.Font.GothamBold
+title.TextSize = 24
+title.BackgroundTransparency = 1
 
-    local ToggleBtn = Instance.new("TextButton")
-    ToggleBtn.Name = "ActivateButton"
-    ToggleBtn.Size = UDim2.new(0, 280, 0, 55)
-    ToggleBtn.Position = UDim2.new(0.5, -140, 0.6, 10)
-    ToggleBtn.BackgroundColor3 = Color3.fromRGB(255, 0, 0)
-    ToggleBtn.Text = "KÍCH HOẠT FARM"
-    ToggleBtn.TextColor3 = Color3.fromRGB(255, 255, 255)
-    ToggleBtn.Font = Enum.Font.GothamBold
-    ToggleBtn.TextSize = 20
-    ToggleBtn.Parent = MainFrame
+local credits = Instance.new("TextLabel", frame)
+credits.Size = UDim2.new(1, 0, 0, 20)
+credits.Position = UDim2.new(0, 0, 0, 45)
+credits.Text = "BY DRAGON"
+credits.TextColor3 = Color3.fromRGB(200, 200, 200)
+credits.Font = Enum.Font.Code
+credits.TextSize = 13
+credits.BackgroundTransparency = 1
 
-    local BtnCorner = Instance.new("UICorner")
-    BtnCorner.CornerRadius = UDim.new(0, 12)
-    BtnCorner.Parent = ToggleBtn
+local btn = Instance.new("TextButton", frame)
+btn.Size = UDim2.new(0, 280, 0, 55)
+btn.Position = UDim2.new(0.5, -140, 0.6, 10)
+btn.BackgroundColor3 = Color3.fromRGB(255, 0, 0)
+btn.Text = "KÍCH HOẠT FARM"
+btn.TextColor3 = Color3.fromRGB(255, 255, 255)
+btn.Font = Enum.Font.GothamBold
+btn.TextSize = 20
 
-    -- LOGIC FARM KHI BẤM NÚT
-    _G.AutoFarm = false
-    ToggleBtn.MouseButton1Click:Connect(function()
-        _G.AutoFarm = not _G.AutoFarm
-        if _G.AutoFarm then
-            ToggleBtn.Text = "ĐANG FARM..."
-            ToggleBtn.BackgroundColor3 = Color3.fromRGB(0, 200, 100)
-            
-            spawn(function()
-                while _G.AutoFarm do
-                    task.wait(0.1)
-                    -- Logic quét rương
-                    for _, v in pairs(game.Workspace:GetDescendants()) do
-                        if v:IsA("Part") and (v.Name:find("Chest") or v.Name:find("Rương")) and v.Transparency == 0 then
-                            if Players.LocalPlayer.Character and Players.LocalPlayer.Character:FindFirstChild("HumanoidRootPart") then
-                                Players.LocalPlayer.Character.HumanoidRootPart.CFrame = v.CFrame
-                                task.wait(0.3)
-                            end
+local btnCorner = Instance.new("UICorner", btn)
+btnCorner.CornerRadius = UDim.new(0, 12)
+
+-- LOGIC FARM
+_G.Farm = false
+btn.MouseButton1Click:Connect(function()
+    _G.Farm = not _G.Farm
+    if _G.Farm then
+        btn.Text = "ĐANG FARM..."
+        btn.BackgroundColor3 = Color3.fromRGB(0, 200, 100)
+        
+        spawn(function()
+            while _G.Farm do
+                task.wait(0.1)
+                for _, v in pairs(game.Workspace:GetDescendants()) do
+                    if v:IsA("Part") and (v.Name:find("Chest") or v.Name:find("Rương")) and v.Transparency == 0 then
+                        if lp.Character and lp.Character:FindFirstChild("HumanoidRootPart") then
+                            lp.Character.HumanoidRootPart.CFrame = v.CFrame
+                            task.wait(0.3)
                         end
                     end
                 end
-            end)
-        else
-            ToggleBtn.Text = "KÍCH HOẠT FARM"
-            ToggleBtn.BackgroundColor3 = Color3.fromRGB(255, 0, 0)
-        end
-    end)
-end
+            end
+        end)
+    else
+        btn.Text = "KÍCH HOẠT FARM"
+        btn.BackgroundColor3 = Color3.fromRGB(255, 0, 0)
+    end
+end)
