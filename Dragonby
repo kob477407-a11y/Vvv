@@ -1,65 +1,114 @@
--- 1. Thêm dịch vụ UI
+-- [[ DRAGON HUB V10 - ALL-IN-ONE LOADER ]]
+
 local CoreGui = game:GetService("CoreGui")
 local TweenService = game:GetService("TweenService")
+local HttpService = game:GetService("HttpService")
 
--- 2. Khung chính (Main Frame)
+-- 1. XÓA UI CŨ ĐỂ TRÁNH GHI ĐÈ
+if CoreGui:FindFirstChild("DragonHub_V10") then
+    CoreGui:FindFirstChild("DragonHub_V10"):Destroy()
+end
+
+-- 2. TẠO GIAO DIỆN CHÍNH
+local ScreenGui = Instance.new("ScreenGui")
+ScreenGui.Name = "DragonHub_V10"
+ScreenGui.Parent = CoreGui
+ScreenGui.ResetOnSpawn = false
+
 local MainFrame = Instance.new("Frame")
-MainFrame.Name = "DragonHub_V10"
-MainFrame.Size = UDim2.new(0, 350, 0, 200)
-MainFrame.Position = UDim2.new(0.5, -175, 0.5, -100)
-MainFrame.BackgroundColor3 = Color3.fromRGB(20, 20, 20)
-MainFrame.Parent = CoreGui:FindFirstChild("RobloxGui") or CoreGui -- Gắn vào CoreGui để tránh bị reset khi chết
+MainFrame.Name = "MainFrame"
+MainFrame.Size = UDim2.new(0, 350, 0, 220)
+MainFrame.Position = UDim2.new(0.5, -175, 0.5, -110)
+MainFrame.BackgroundColor3 = Color3.fromRGB(15, 15, 15) -- Nền đen đậm
+MainFrame.BorderSizePixel = 0
+MainFrame.Active = true
+MainFrame.Draggable = true -- Có thể kéo thả trên điện thoại/PC
+MainFrame.Parent = ScreenGui
 
 local UICorner = Instance.new("UICorner")
 UICorner.CornerRadius = UDim.new(0, 15)
 UICorner.Parent = MainFrame
 
--- 3. Tiêu đề chính
+-- ĐƯỜNG VIỀN ĐỎ MỜ (GLOW)
+local UIStroke = Instance.new("UIStroke")
+UIStroke.Color = Color3.fromRGB(255, 0, 0)
+UIStroke.Thickness = 2
+UIStroke.Transparency = 0.5
+UIStroke.Parent = MainFrame
+
+-- 3. TIÊU ĐỀ & CREDIT
 local Title = Instance.new("TextLabel")
 Title.Size = UDim2.new(1, 0, 0, 50)
 Title.Text = "DRAGON HUB V10"
-Title.TextColor3 = Color3.fromRGB(255, 50, 50) -- Màu đỏ đặc trưng của rồng
+Title.TextColor3 = Color3.fromRGB(255, 40, 40)
 Title.Font = Enum.Font.GothamBold
-Title.TextSize = 22
+Title.TextSize = 24
 Title.BackgroundTransparency = 1
 Title.Parent = MainFrame
 
--- 4. Dòng chữ BY DRAGON (Dấu ấn của bạn)
 local Credits = Instance.new("TextLabel")
 Credits.Size = UDim2.new(1, 0, 0, 20)
-Credits.Position = UDim2.new(0, 0, 0, 40)
+Credits.Position = UDim2.new(0, 0, 0, 45)
 Credits.Text = "BY DRAGON"
 Credits.TextColor3 = Color3.fromRGB(200, 200, 200)
 Credits.Font = Enum.Font.Code
-Credits.TextSize = 12
-Credits.TextTransparency = 0.3
+Credits.TextSize = 13
 Credits.BackgroundTransparency = 1
 Credits.Parent = MainFrame
 
--- 5. Nút Bật/Tắt (Toggle)
+-- 4. NÚT KÍCH HOẠT
 local ToggleBtn = Instance.new("TextButton")
-ToggleBtn.Size = UDim2.new(0, 250, 0, 45)
-ToggleBtn.Position = UDim2.new(0.5, -125, 0.6, 0)
-ToggleBtn.BackgroundColor3 = Color3.fromRGB(40, 40, 40)
+ToggleBtn.Name = "ActivateButton"
+ToggleBtn.Size = UDim2.new(0, 280, 0, 50)
+ToggleBtn.Position = UDim2.new(0.5, -140, 0.65, 0)
+ToggleBtn.BackgroundColor3 = Color3.fromRGB(255, 0, 0)
 ToggleBtn.Text = "KÍCH HOẠT"
 ToggleBtn.TextColor3 = Color3.fromRGB(255, 255, 255)
-ToggleBtn.Font = Enum.Font.GothamMedium
-ToggleBtn.TextSize = 16
+ToggleBtn.Font = Enum.Font.GothamBold
+ToggleBtn.TextSize = 18
+ToggleBtn.AutoButtonColor = true
 ToggleBtn.Parent = MainFrame
 
 local BtnCorner = Instance.new("UICorner")
-BtnCorner.CornerRadius = UDim.new(0, 10)
+BtnCorner.CornerRadius = UDim.new(0, 12)
 BtnCorner.Parent = ToggleBtn
 
--- Hiệu ứng khi nhấn nút
+-- 5. LOGIC KHI BẤM NÚT
+local isRunning = false
 ToggleBtn.MouseButton1Click:Connect(function()
-    ToggleBtn.Text = "ĐANG KÍCH HOẠT..."
-    ToggleBtn.BackgroundColor3 = Color3.fromRGB(0, 200, 100) -- Đổi sang màu xanh khi chạy
-    
-    -- Lệnh này sẽ tải và chạy code từ link GitHub của bạn
-    pcall(function()
-        loadstring(game:HttpGet("https://raw.githubusercontent.com/kob477407-a11y/Vvv/refs/heads/main/Dragonby"))()
-    end)
-    
-    ToggleBtn.Text = "ĐÃ KÍCH HOẠT"
+    if not isRunning then
+        isRunning = true
+        
+        -- Hiệu ứng chuyển trạng thái
+        ToggleBtn.Text = "ĐANG KẾT NỐI GITHUB..."
+        TweenService:Create(ToggleBtn, TweenInfo.new(0.3), {BackgroundColor3 = Color3.fromRGB(100, 0, 0)}):Play()
+
+        -- Gọi Script từ link của bạn
+        local success, err = pcall(function()
+            return loadstring(game:HttpGet("https://raw.githubusercontent.com/kob477407-a11y/Vvv/refs/heads/main/Dragonby"))()
+        end)
+
+        if success then
+            ToggleBtn.Text = "ĐÃ KÍCH HOẠT THÀNH CÔNG!"
+            ToggleBtn.BackgroundColor3 = Color3.fromRGB(0, 180, 70) -- Đổi sang xanh lá khi xong
+            
+            -- Thông báo nhỏ góc màn hình
+            game.StarterGui:SetCore("SendNotification", {
+                Title = "Dragon Hub V10",
+                Text = "Script đã được tải từ GitHub!",
+                Duration = 5
+            })
+        else
+            -- Xử lý khi lỗi (Sai link hoặc GitHub lỗi)
+            ToggleBtn.Text = "LỖI: KIỂM TRA LẠI LINK!"
+            ToggleBtn.BackgroundColor3 = Color3.fromRGB(255, 100, 0)
+            warn("Loi load script tu GitHub: " .. tostring(err))
+            wait(3)
+            ToggleBtn.Text = "THỬ LẠI"
+            ToggleBtn.BackgroundColor3 = Color3.fromRGB(255, 0, 0)
+            isRunning = false
+        end
+    end
 end)
+
+print("Dragon Hub V10 Loader has been started!")
