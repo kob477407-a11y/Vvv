@@ -1,0 +1,59 @@
+-- 1. Thêm dịch vụ UI
+local CoreGui = game:GetService("CoreGui")
+local TweenService = game:GetService("TweenService")
+
+-- 2. Khung chính (Main Frame)
+local MainFrame = Instance.new("Frame")
+MainFrame.Name = "DragonHub_V10"
+MainFrame.Size = UDim2.new(0, 350, 0, 200)
+MainFrame.Position = UDim2.new(0.5, -175, 0.5, -100)
+MainFrame.BackgroundColor3 = Color3.fromRGB(20, 20, 20)
+MainFrame.Parent = CoreGui:FindFirstChild("RobloxGui") or CoreGui -- Gắn vào CoreGui để tránh bị reset khi chết
+
+local UICorner = Instance.new("UICorner")
+UICorner.CornerRadius = UDim.new(0, 15)
+UICorner.Parent = MainFrame
+
+-- 3. Tiêu đề chính
+local Title = Instance.new("TextLabel")
+Title.Size = UDim2.new(1, 0, 0, 50)
+Title.Text = "DRAGON HUB V10"
+Title.TextColor3 = Color3.fromRGB(255, 50, 50) -- Màu đỏ đặc trưng của rồng
+Title.Font = Enum.Font.GothamBold
+Title.TextSize = 22
+Title.BackgroundTransparency = 1
+Title.Parent = MainFrame
+
+-- 4. Dòng chữ BY DRAGON (Dấu ấn của bạn)
+local Credits = Instance.new("TextLabel")
+Credits.Size = UDim2.new(1, 0, 0, 20)
+Credits.Position = UDim2.new(0, 0, 0, 40)
+Credits.Text = "BY DRAGON"
+Credits.TextColor3 = Color3.fromRGB(200, 200, 200)
+Credits.Font = Enum.Font.Code
+Credits.TextSize = 12
+Credits.TextTransparency = 0.3
+Credits.BackgroundTransparency = 1
+Credits.Parent = MainFrame
+
+-- 5. Nút Bật/Tắt (Toggle)
+local ToggleBtn = Instance.new("TextButton")
+ToggleBtn.Size = UDim2.new(0, 250, 0, 45)
+ToggleBtn.Position = UDim2.new(0.5, -125, 0.6, 0)
+ToggleBtn.BackgroundColor3 = Color3.fromRGB(40, 40, 40)
+ToggleBtn.Text = "KÍCH HOẠT"
+ToggleBtn.TextColor3 = Color3.fromRGB(255, 255, 255)
+ToggleBtn.Font = Enum.Font.GothamMedium
+ToggleBtn.TextSize = 16
+ToggleBtn.Parent = MainFrame
+
+local BtnCorner = Instance.new("UICorner")
+BtnCorner.CornerRadius = UDim.new(0, 10)
+BtnCorner.Parent = ToggleBtn
+
+-- Hiệu ứng khi nhấn nút
+ToggleBtn.MouseButton1Click:Connect(function()
+    ToggleBtn.Text = "ĐANG CHẠY..."
+    TweenService:Create(ToggleBtn, TweenInfo.new(0.3), {BackgroundColor3 = Color3.fromRGB(255, 0, 0)}):Play()
+    print("Dragon Hub V10 has been activated!")
+end)
