@@ -1,81 +1,64 @@
--- [[ DRAGON HUB V10 - PRO EDITION ]]
--- Script sử dụng Rayfield Library để có giao diện chuyên nghiệp nhất
+-- [[ DRAGON HUB V10 - FIX CHAY 100% ]]
+print("Dragon Hub V10 đang khởi động...")
 
-local Rayfield = loadstring(game:HttpGet('https://sirius.menu/rayfield'))()
+local Players = game:GetService("Players")
+local LP = Players.LocalPlayer
+local TweenService = game:GetService("TweenService")
 
-local Window = Rayfield:CreateWindow({
-   Name = "DRAGON HUB V10 | Blox Fruits",
-   LoadingTitle = "BY DRAGON",
-   LoadingSubtitle = "Hệ thống Farm rương ổn định",
-   ConfigurationSaving = {
-      Enabled = true,
-      FolderName = "DragonHubV10"
-   },
-   KeySystem = false -- Bạn có thể bật true nếu muốn làm hệ thống Key như Hub lớn
-})
-
-local MainTab = Window:CreateTab("Auto Farm", 4483362458) -- Icon Farm
-local Section = MainTab:CreateSection("Chest Farm (Nhặt rương)")
-
-_G.AutoChest = false
-
--- Hàm di chuyển mượt (Tween) để không bị Anti-cheat đứng im
-local function SmoothTP(targetCFrame)
-    local char = game.Players.LocalPlayer.Character
-    local root = char and char:FindFirstChild("HumanoidRootPart")
-    if root then
-        local distance = (root.Position - targetCFrame.p).Magnitude
-        local speed = 350 -- Tốc độ bay (Dưới 350 là cực kỳ an toàn)
-        local info = TweenInfo.new(distance / speed, Enum.EasingStyle.Linear)
-        local tween = game:GetService("TweenService"):Create(root, info, {CFrame = targetCFrame})
-        tween:Play()
-        return tween
-    end
+-- 1. XÓA UI CŨ
+if game:GetService("CoreGui"):FindFirstChild("DragonHubV10") then
+    game:GetService("CoreGui").DragonHubV10:Destroy()
 end
 
--- Nút gạt bật/tắt xịn xò
-MainTab:CreateToggle({
-   Name = "Tự động nhặt rương (All Sea)",
-   CurrentValue = false,
-   Flag = "ChestToggle",
-   Callback = function(Value)
-      _G.AutoChest = Value
-      if Value then
-         spawn(function()
-            while _G.AutoChest do
-               task.wait(0.1)
-               pcall(function()
-                  local target = nil
-                  -- Quét rương trong toàn bộ Workspace
-                  for _, v in pairs(game:GetService("Workspace"):GetDescendants()) do
-                     if v:IsA("Part") and (v.Name:find("Chest") or v.Name:find("Rương")) and v.Transparency < 1 then
+-- 2. TẠO UI ĐƠN GIẢN NHƯNG CHẠY MƯỢT
+local sg = Instance.new("ScreenGui", game:GetService("CoreGui"))
+sg.Name = "DragonHubV10"
+
+local main = Instance.new("Frame", sg)
+main.Size = UDim2.new(0, 200, 0, 100)
+main.Position = UDim2.new(0.5, -100, 0.5, -50)
+main.BackgroundColor3 = Color3.fromRGB(30, 30, 30)
+main.Active = true
+main.Draggable = true -- Có thể kéo trên màn hình
+
+local btn = Instance.new("TextButton", main)
+btn.Size = UDim2.new(1, -20, 1, -20)
+btn.Position = UDim2.new(0, 10, 0, 10)
+btn.BackgroundColor3 = Color3.fromRGB(255, 0, 0)
+btn.Text = "BẮT ĐẦU FARM"
+btn.TextColor3 = Color3.fromRGB(255, 255, 255)
+btn.Font = Enum.Font.GothamBold
+btn.TextSize = 18
+
+-- 3. LOGIC BAY MƯỢT (KHÔNG NHẢY CÓC - KHÔNG ĐỨNG IM)
+_G.DragonAuto = false
+btn.MouseButton1Click:Connect(function()
+    _G.DragonAuto = not _G.DragonAuto
+    btn.Text = _G.DragonAuto and "ĐANG FARM..." or "BẮT ĐẦU FARM"
+    btn.BackgroundColor3 = _G.DragonAuto and Color3.fromRGB(0, 200, 100) or Color3.fromRGB(255, 0, 0)
+    
+    spawn(function()
+        while _G.DragonAuto do
+            task.wait(0.1)
+            pcall(function()
+                local target = nil
+                for _, v in pairs(game:GetService("Workspace"):GetDescendants()) do
+                    if v:IsA("Part") and (v.Name:find("Chest") or v.Name:find("Rương")) and v.Transparency < 1 then
                         target = v
-                        break -- Ưu tiên tìm thấy cái nào đi cái đó luôn
-                     end
-                  end
-
-                  if target then
-                     local movement = SmoothTP(target.CFrame)
-                     if movement then
-                        movement.Completed:Wait() -- Đợi bay tới nơi mới nhặt rương tiếp
-                        task.wait(0.2) -- Thời gian nghỉ để game nhận tiền
-                     end
-                  else
-                      -- Nếu không có rương thì thông báo
-                      print("Dragon Hub: Dang đợi rương hồi...")
-                      task.wait(2)
-                  end
-               end)
-            end
-         end)
-      end
-   end,
-})
-
--- Thông báo chào mừng
-Rayfield:Notify({
-   Title = "Kích hoạt thành công!",
-   Content = "Chào mừng Dragon, bản V10 Pro đã sẵn sàng.",
-   Duration = 5,
-   Image = 4483362458,
-})
+                        break
+                    end
+                end
+                
+                if target and LP.Character and LP.Character:FindFirstChild("HumanoidRootPart") then
+                    local root = LP.Character.HumanoidRootPart
+                    local dist = (root.Position - target.Position).Magnitude
+                    -- Bay mượt với tốc độ 300
+                    local tween = TweenService:Create(root, TweenInfo.new(dist/300, Enum.EasingStyle.Linear), {CFrame = target.CFrame})
+                    tween:Play()
+                    tween.Completed:Wait()
+                    task.wait(0.2)
+                end
+            end)
+        end
+    end)
+end)
